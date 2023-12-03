@@ -7,9 +7,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import ru.kata.spring.boot_security.demo.model.MyUserDetails;
 import ru.kata.spring.boot_security.demo.model.User;
-import ru.kata.spring.boot_security.demo.repository.UserRepository;
+import ru.kata.spring.boot_security.demo.service.MyUserService;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,17 +16,17 @@ import java.util.Optional;
 @Controller
 public class UsersController {
 
-    private final UserRepository userRepository;
+    private final MyUserService userService;
 
 
     @Autowired
-    public UsersController(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public UsersController(MyUserService userService) {
+        this.userService = userService;
     }
 
     @GetMapping("/admin")
     public String showAllUsers(Model model) {
-        List<User> allUsers = userRepository.findAll();
+        List<User> allUsers = userService.findAll();
         model.addAttribute("allUsers", allUsers);
         return "admin";
     }
@@ -40,28 +39,26 @@ public class UsersController {
 
     @PostMapping("/saveUser")
     public String saveUser(@ModelAttribute("user") User user) {
-        userRepository.saveAndFlush(user);
+        userService.save(user);
         return "redirect:/admin";
     }
 
     @GetMapping("/{id}/updateUser")
     public String updateUser(@PathVariable("id") int id, Model model){
-    Optional<User> optionalUser = userRepository.findById(id);
-        if (optionalUser.isPresent()) {
-            model.addAttribute("user", optionalUser.get());
-        }
+    Optional<User> optionalUser = userService.findById(id);
+        optionalUser.ifPresent(user -> model.addAttribute("user", user));
         return "update-user";
     }
 
-    @PostMapping("/saveUpdatedUser")
+    @PutMapping("/saveUpdatedUser")
     public String saveUpdatedUser(@ModelAttribute("user") User user) {
-        userRepository.saveAndFlush(user);
+        userService.save(user);
         return "redirect:/admin";
     }
 
     @PostMapping("/deleteUser")
     public String deleteUser(@RequestParam("id") int id) {
-        userRepository.deleteById(id);
+        userService.deleteById(id);
         return "redirect:/admin";
     }
 
@@ -72,8 +69,7 @@ public class UsersController {
 
     @GetMapping("/user")
     public String showUserPage(Model model,Authentication authentication){
-        MyUserDetails userDetails = (MyUserDetails) authentication.getPrincipal();
-        User user = userDetails.getUser();
+        User user = (User) authentication.getPrincipal();
         model.addAttribute("userInform",user.toString());
         return "user";
     }
