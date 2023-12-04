@@ -45,8 +45,8 @@ public class UsersController {
 
     @GetMapping("/{id}/updateUser")
     public String updateUser(@PathVariable("id") int id, Model model){
-    Optional<User> optionalUser = userService.findById(id);
-        optionalUser.ifPresent(user -> model.addAttribute("user", user));
+        User user = userService.findById(id);
+        model.addAttribute("user", user);
         return "update-user";
     }
 
